@@ -37,10 +37,10 @@ class GaussianOU(SDE):
     def simulate(self, nt, t_max):
         dt = t_max / nt
         temp = np.exp(-self.alpha * dt)
-        X = np.zeros(nt)
+        X = np.zeros(nt + 1)
         X[0] = self.x0
         temp2 = self.sigma * np.sqrt((1 - temp ** 2) / (2 * self.alpha))
-        for i in range(1, nt):
+        for i in range(1, nt + 1):
             X[i] = self.mu * (1 - temp) + temp * X[i - 1] + temp2 * np.random.standard_normal()
 
         return X
