@@ -65,3 +65,51 @@ class GaussianOU(SDE):
 
 
 
+# Auxiliary classes for the Background Levy driving processes of non-Gaussian OU processes
+
+# jump size distribution
+
+
+class JumpSize():
+
+    def __init__(self, name, parameters):
+        self.distribution = name
+        self.parameters = parameters
+
+    def simulate(self):
+        if self.distribution == 'exponential':
+
+            return np.random.exponential(self.parameters)
+        else:
+            return 0
+
+
+class CPoissonProcess:
+    """
+    Compound Poisson process
+
+    with initial value x0, eta intensity function,
+    and jump distribution jump_distribution.
+    If eta is constant, it is interpreted as the mean arrival rate
+    """
+    def __init__(self, eta, jump_distribution=JumpSize('exponential', 1), x0=0):
+        self.x0 = x0
+        self.eta = eta           # scale parameter, inverse of rate parameter. It is such mean is eta
+        self.jump_distribution = jump_distribution
+
+    def simulate(self, tmax):
+        jumps = [0]
+        jump_times = [0]
+
+        t = np.random.exponential(self.eta)
+
+        while t < tmax:
+            jump_times.append(t)
+            t = t + np.random.exponential(self.eta)
+            jumps.append(self.jump_distribution.simulate())
+
+
+        X = np.array(jump_times)
+        Y = np.array(jumps)
+        return X, Y
+
