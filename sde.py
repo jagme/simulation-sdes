@@ -88,30 +88,29 @@ class CPoissonProcess:
     """
     Compound Poisson process
 
-    with initial value x0, eta intensity function,
+    with initial value x0, eta inverse of intensity rate (the expected time between jumps),
     and jump distribution jump_distribution.
-    If eta is constant, it is interpreted as the mean arrival rate
     """
     def __init__(self, eta, jump_distribution=JumpSize('exponential', 1), x0=0):
         self.x0 = x0
-        self.eta = eta           # scale parameter, inverse of rate parameter. It is such mean is eta
+        self.eta = eta
         self.jump_distribution = jump_distribution
 
-    def simulate(self, tmax):
-        jumps = [0]
+    def simulate(self, t_max):
+        jump_sizes = [0]
         jump_times = [0]
 
         t = np.random.exponential(self.eta)
 
-        while t < tmax:
+        while t < t_max:
             jump_times.append(t)
             t = t + np.random.exponential(self.eta)
-            jumps.append(self.jump_distribution.simulate())
-
+            jump_sizes.append(self.jump_distribution.simulate())
 
         X = np.array(jump_times)
-        Y = np.array(jumps)
+        Y = np.array(jump_sizes)
         return X, Y
+
 
 class NonGaussianOU(SDE):
     """
