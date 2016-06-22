@@ -113,3 +113,44 @@ class CPoissonProcess:
         Y = np.array(jumps)
         return X, Y
 
+class NonGaussianOU(SDE):
+    """
+    Non Gaussian OU process
+
+    dXt = alpha*(mu - Xt)*dt + sigma*dLt, X0 = x0,
+
+    alpha is the speed of mean reversion,
+    mu is the level of mean reversion,
+    sigma is the volatility and,
+    Lt is the Background Driving Levy process (BDLP).
+    Lt could be e.g. a Compound Poisson process with exponentially distributed jump sizes.
+    """
+    def __init__(self, x0, alpha, mu=0, sigma=1, bdlp=CPoissonProcess(1)):
+        super(NonGaussianOU, self).__init__(x0)
+        self.alpha = alpha
+        self.mu = mu
+        self.sigma = sigma
+        self.bdlp = bdlp  # background driving Levy process
+
+    def simulate(self, nt, t_max):
+        # jump times and jump sizes of underlying Levy process
+        jump_times, jump_sizes = self.bdlp.simulate(t_max)
+
+        grid0 = np.linspace(0, t_max, nt + 1)
+        grid_t = np.concatenate((grid0, jump_times[1:]))
+        grid_j = np.concatenate((np.zeros_like(grid0), jump_sizes[1:]))
+
+        order_grid = np.argsort(grid_t)
+
+        grid_t = grid_t[order_grid]
+        grid_j = grid_j[order_grid]
+
+        X = np.zeros_like(grid_t)
+        X[0] = self.x0
+
+        for i in range(1, len(X)):
+            dt = grid_t[i] - grid_t[i-1]
+            # for bldp a comp. Poisson process, otherwise should use infinite series representation
+            X[i] = self.mu + (X[i-1] - self.mu)*exp(-self.alpha*dt) + self.sigma*grid_j[i]
+
+        return X, grid_t, jump_times, jump_sizes
