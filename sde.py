@@ -33,15 +33,20 @@ class GaussianOU(SDE):
     def get_parameters(self):
         return self.mu, self.alpha, self.sigma
 
-
-    def simulate(self, nt, t_max):
-        dt = t_max / nt
+    def simulate(self, dates):
+        """
+        Exact simulation of Gaussian OU process over the possibly irregular time partition dates
+        e.g. {0, dt, 3dt, 4dt, ..., T}
+        """
+        dt = np.diff(dates)
         temp = np.exp(-self.alpha * dt)
-        X = np.zeros(nt + 1)
-        X[0] = self.x0
         temp2 = self.sigma * np.sqrt((1 - temp ** 2) / (2 * self.alpha))
-        for i in range(1, nt + 1):
-            X[i] = self.mu * (1 - temp) + temp * X[i - 1] + temp2 * np.random.standard_normal()
+
+        X = np.zeros_like(dates)
+        X[0] = self.x0
+
+        for i in range(1, len(X)):
+            X[i] = self.mu * (1 - temp[i-1]) + temp[i-1] * X[i-1] + temp2[i-1] * np.random.standard_normal()
 
         return X
 
@@ -51,15 +56,15 @@ class GaussianOU(SDE):
     def conditional_var(self, dt):
         return self.sigma ** 2 / 2 / self.alpha * (1 - exp(-2 * self.alpha * dt))
 
-
-    def simulate_m_ou(self, nt, t_max, m):
+    def simulate_m_ou(self, dates, m):
         """
         Simulate m sample paths of the OU process
         """
+        nt = np.alen(dates)
         X = np.zeros((m, nt))
-        # X = [self.simulate(nt, t_max) for i in range(m + 1)]
+
         for i in range(0, m):
-            X[i,] = self.simulate(nt, t_max)
+            X[i,] = self.simulate(dates)
 
         return X
 
@@ -131,16 +136,19 @@ class NonGaussianOU(SDE):
         self.sigma = sigma
         self.bdlp = bdlp  # background driving Levy process
 
-    def simulate(self, nt, t_max):
+    def simulate(self, dates):
+        """
+        Exact simulation of Non Gaussian OU process
+        """
         # jump times and jump sizes of underlying Levy process
-        jump_times, jump_sizes = self.bdlp.simulate(t_max)
+        jump_times, jump_sizes = self.bdlp.simulate(dates[-1]) # until max. time
 
-        grid0 = np.linspace(0, t_max, nt + 1)
-        grid_t = np.concatenate((grid0, jump_times[1:]))
-        grid_j = np.concatenate((np.zeros_like(grid0), jump_sizes[1:]))
-
+        # refine time partition for simulation using given dates and jump times
+        grid_t = np.concatenate((dates, jump_times[1:]))
+        # join all (possibly zero-size) jumps
+        grid_j = np.concatenate((np.zeros_like(dates), jump_sizes[1:]))
+        # and order jump times and sizes
         order_grid = np.argsort(grid_t)
-
         grid_t = grid_t[order_grid]
         grid_j = grid_j[order_grid]
 
