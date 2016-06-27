@@ -161,3 +161,26 @@ class NonGaussianOU(SDE):
             X[i] = self.mu + (X[i-1] - self.mu)*exp(-self.alpha*dt) + self.sigma*grid_j[i]
 
         return X, grid_t, jump_times, jump_sizes
+
+
+class Arithmetic2OU(SDE):
+    """
+    Gaussian OU + Non-Gaussian OU: Y1 + Y2
+    """
+    def __init__(self, x0, y1=GaussianOU(), y2=NonGaussianOU(0, 0.5)):
+        super(Arithmetic2OU, self).__init__(x0)
+        self.y1 = y1
+        self.y2 = y2
+
+    def simulate(self, dates):
+        # simulate jump process first
+        y2, grid_t, jtimes, jsizes = self.y2.simulate(dates)
+
+        # simulate Gaussian OU over this grid to get exact solution
+        y1 = self.y1.simulate(grid_t)
+
+        x = y1 + y2
+
+        return x, grid_t, y1, y2, jtimes, jsizes
+
+
