@@ -184,3 +184,13 @@ class Arithmetic2OU(SDE):
         return x, grid_t, y1, y2, jtimes, jsizes
 
 
+class Geometric2OU(Arithmetic2OU):
+
+    def __init__(self, x0, y1=GaussianOU(), y2=NonGaussianOU(0, 0.5)):
+        super(Geometric2OU, self).__init__(x0, y1, y2)
+
+    def simulate(self, dates):
+        x, grid_t = super().simulate(dates)
+
+        return np.exp(x), grid_t
+
