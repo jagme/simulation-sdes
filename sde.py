@@ -1,15 +1,40 @@
 import numpy as np
-
 from math import exp
+from abc import ABCMeta, abstractmethod
 
 
-class SDE:
+class SDE(metaclass=ABCMeta):
     """
-    Class for stochastic differential equations (SDEs)
+    Base class for stochastic differential equations (SDEs)
+
+        Xt = mu(t)dt + sigma(t)dY(t), X0 = x0
+
     """
 
     def __init__(self, x0):
         self.x0 = x0
+
+    @abstractmethod
+    def drift(self, x, t):
+        """
+        Drift function mu(t) of the SDE
+        """
+        pass
+
+    @abstractmethod
+    def volatility(self, x, t):
+        """
+        Volatility function sigma(t) of the SDE
+        """
+        pass
+
+    @abstractmethod
+    def simulate(self, dates):
+        """
+        Simulate SDE. dates defines the time partition over which the SDE is simulated,
+        e.g. dates = np.array([0, dt, 2dt, ... T])
+        """
+        pass
 
 
 class GaussianOU(SDE):
@@ -32,6 +57,12 @@ class GaussianOU(SDE):
 
     def get_parameters(self):
         return self.mu, self.alpha, self.sigma
+
+    def drift(self, x, t):
+        return self.alpha*(self.mu - x)
+
+    def volatility(self, x, t):
+        return self.sigma
 
     def simulate(self, dates):
         """
@@ -136,6 +167,12 @@ class NonGaussianOU(SDE):
         self.sigma = sigma
         self.bdlp = bdlp  # background driving Levy process
 
+    def drift(self, x, t):
+        return self.alpha * (self.mu - x)
+
+    def volatility(self, x, t):
+        return self.sigma
+
     def simulate(self, dates):
         """
         Exact simulation of Non Gaussian OU process
@@ -171,6 +208,12 @@ class Arithmetic2OU(SDE):
         super(Arithmetic2OU, self).__init__(x0)
         self.y1 = y1
         self.y2 = y2
+
+    def drift(self, x, t):
+        return self.y1.drift(x, t), self.y2.drift(x, t)
+
+    def volatility(self, x, t):
+        return self.y1.volatility(x, t), self.volatility(x, t)
 
     def simulate(self, dates):
         # simulate jump process first
