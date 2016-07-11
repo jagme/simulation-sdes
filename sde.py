@@ -100,6 +100,40 @@ class GaussianOU(SDE):
         return X
 
 
+class GBM(SDE):
+    """
+    Class for Geometric Brownian Motion
+
+        dXt = rXtdt + sigmaXtdWt
+
+    where r is the interest rate
+    sigma is the volatility
+    Wt is a standard Wiener process
+    """
+
+    def __init__(self, x0, r=0.1, sigma=0.3):
+        super(GBM, self).__init__(x0)
+        self.r = r
+        self.sigma = sigma
+
+    def drift(self, x, t):
+        return self.r * x
+
+    def volatility(self, x, t):
+        return self.sigma * x
+
+    def simulate(self, dates):
+        dt = np.diff(dates)
+        temp = self.r - 0.5*self.sigma**2
+        temp2 = self.sigma * np.sqrt(dt)
+
+        X = np.zeros_like(dates)
+        X[0] = self.x0
+
+        for i in range(1, len(X)):
+            X[i] = X[i-1] * np.exp(temp*dt[i-1] + temp2[i-1] * np.random.standard_normal())
+
+        return X
 
 # Auxiliary classes for the Background Levy driving processes of non-Gaussian OU processes
 
