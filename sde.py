@@ -135,6 +135,68 @@ class GBM(SDE):
 
         return X
 
+
+class CIR(SDE):
+    """
+    Class for CIR model
+
+        dXt = alpha*(mu - Xt)dt + sigma*sqrt(Xt)dWt
+
+    If X[0]>0, then X[t] will always be positive
+    If 2*alpha*mu >= sigma^2, then X[t] is positive almost surely
+
+    This model is simulated using its transition density.
+    See 'Monte Carlo methods in Financial Engineering' by Glasserman (2004), Section 3.4
+    """
+
+    def __init__(self, x0=1, alpha=1, mu=1, sigma=1):
+        if x0 > 0:
+            super().__init__(x0)
+        else:
+            print("We only consider x0>0. x0 set to 1")
+            super().__init__(1)
+
+        self.alpha = alpha
+        self.mu = mu
+
+        if sigma>0:
+            self.sigma = sigma
+        else:
+            print("Sigma must be greater than zero. sigma set to 1")
+            self.sigma = 1
+
+    def drift(self, x, t):
+        return self.alpha * (self.mu - x)
+
+    def volatility(self, x, t):
+        return self.sigma
+
+    def simulate(self, dates):
+        dt = np.diff(dates)
+
+        df = 4 * self.mu * self.alpha/(self.sigma ** 2)
+
+        X = np.zeros_like(dates)
+        X[0] = self.x0
+
+        b = np.exp(-self.alpha * dt)
+        c = self.sigma **2 /(4 * self.alpha) * (1 - b)
+
+        for i in range(1, len(X)):
+            if df > 1:
+                l = b[i-1] / c[i-1] * X[i-1]
+                z = np.random.standard_normal()
+                x = np.random.chisquare(df-1)
+
+                X[i] = c[i-1] * ((z + np.sqrt(l))**2 + x)
+
+            else:
+                l = b[i-1] / c[i-1] * X[i-1]
+                p = np.random.poisson(l/2)
+                x = np.random.chisquare(df + 2*p)
+                X[i] = c[i-1] * x
+
+        return X
 # Auxiliary classes for the Background Levy driving processes of non-Gaussian OU processes
 
 # jump size distribution
