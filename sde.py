@@ -197,6 +197,20 @@ class CIR(SDE):
                 X[i] = c[i-1] * x
 
         return X
+
+    def transition(self, y, x, dt):
+        # F(y(t+dt) | x(t)) * c
+        # a non-central chi squared distribution times c
+        c = self.sigma**2 (1 - np.exp(-self.alpha * dt))/(4*self.alpha)
+        # degrees of freedom
+        df = 4*self.mu * self.alpha / self.sigma**2
+        # non-centrality parameter
+        lam = x * 4 * self.alpha * np.exp(-self.alpha*dt) / (self.sigma**2 * (1 - np.exp(-self.alpha*dt)))
+
+        pdf = c * stats.ncx2.pdf(y, df, lam)
+
+        return pdf
+
 # Auxiliary classes for the Background Levy driving processes of non-Gaussian OU processes
 
 # jump size distribution
