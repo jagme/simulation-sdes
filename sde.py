@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import stats
 from math import exp
 from abc import ABCMeta, abstractmethod
 
