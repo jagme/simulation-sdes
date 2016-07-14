@@ -348,3 +348,37 @@ class Geometric2OU(Arithmetic2OU):
 
         return np.exp(x), grid_t
 
+class Heston(SDE):
+    """
+    Class for Heston stochastic volatility model
+        dXt = mu*Xt*dt + Xt*sqrt(Vt)*dWt,
+        dVt = alpha*(mu2 - Vt)*dt + sigma*sqrt(Vt)*dWt
+
+    alpha, mu2, sigma > 0
+    """
+
+    def __init__(self, x0=0, mu=0, vol_process=CIR()):
+        super().__init__(x0)
+        self.mu = mu
+        self.vol_process = vol_process
+
+    def drift(self, x, t):
+        pass
+
+    def volatility(self, x, t):
+        pass
+
+    def simulate(self, dates):
+
+        vol = self.vol_process.simulate(dates)
+        dt = np.diff(dates)
+
+        X = np.zeros_like(vol)
+        X[0] = self.x0
+
+        for i in range(1, len(vol)):
+            temp = self.mu - 0.5*vol[i-1]
+            temp2 = np.sqrt(vol[i-1] * dt[i-1])
+            X[i] = X[i-1] * np.exp(temp*dt[i-1] + temp2 * np.random.standard_normal())
+
+        return X, vol
