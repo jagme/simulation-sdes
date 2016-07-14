@@ -100,6 +100,14 @@ class GaussianOU(SDE):
 
         return X
 
+    def transition(self, y, x, dt):
+        # F(y(t+dt) | x(t))
+        mean = y - self.mu - (x - self.mu)*np.exp(-self.alpha*dt)
+        sigma2 = self.sigma**2 * (1 - np.exp(-2*self.alpha*dt)) / self.alpha / 2
+
+        pdf = stats.norm.pdf(x, mean, np.sqrt(sigma2))
+
+        return pdf
 
 class GBM(SDE):
     """
