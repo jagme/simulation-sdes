@@ -50,7 +50,7 @@ class GaussianOU(SDE):
     sigma is the volatility.
     """
 
-    def __init__(self, x0=0, mu=0, alpha=1, sigma=1):
+    def __init__(self, x0=0, alpha=1, mu=0, sigma=1):
         super().__init__(x0)
         self.mu = mu
         self.alpha = alpha
@@ -108,6 +108,7 @@ class GaussianOU(SDE):
         pdf = stats.norm.pdf(x, mean, np.sqrt(sigma2))
 
         return pdf
+
 
 class GBM(SDE):
     """
@@ -352,7 +353,7 @@ class Geometric2OU(Arithmetic2OU):
         super(Geometric2OU, self).__init__(x0, y1, y2)
 
     def simulate(self, dates):
-        x, grid_t = super().simulate(dates)
+        x, grid_t, y1, y2, jtimes, jsizes = super().simulate(dates)
 
         return np.exp(x), grid_t
 
