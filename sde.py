@@ -42,9 +42,9 @@ class GaussianOU(SDE):
     """
     Class for Gaussian Ornstein-Uhlenbeck processes (aka Vasiceck model)
 
-        dXt = alpha*(mu - Xt)*dt + sigma*dW(t), X0 = x0,
+        dXt = alpha*(mu - Xt)*dt + sigma*dWt, X0 = x0,
 
-    where W(t) is a standard Wiener process,
+    where Wt is a standard Wiener process,
     alpha is the speed of mean reversion,
     mu is the level of mean reversion, and
     sigma is the volatility.
@@ -233,7 +233,7 @@ class JumpSize():
 
     def simulate(self):
         if self.distribution == 'exponential':
-
+            # the argument is the scale parameter, i.e. the mean of the distribution
             return np.random.exponential(self.parameters)
         else:
             return 0
